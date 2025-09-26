@@ -12,10 +12,10 @@ export async function GET() {
     console.log(`📦 Found ${products.length} products`);
 
     return NextResponse.json(products);
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ Error in API:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch products" },
+      { error: error instanceof Error ? error.message : "Failed to fetch products" },
       { status: 500 }
     );
   }
@@ -27,9 +27,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const product = await Product.create(body);
     return NextResponse.json(product, { status: 201 });
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
-      { error: error.message || "Failed to create product" },
+      { error: error instanceof Error ? error.message : "Failed to create product" },
       { status: 500 }
     );
   }
