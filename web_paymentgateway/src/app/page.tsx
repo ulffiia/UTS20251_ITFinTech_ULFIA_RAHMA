@@ -4,8 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  price: number;
+  image?: string;
+  category: string;
+}
+
+
 export default function SelectItem() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { cart, addToCart } = useCart();
