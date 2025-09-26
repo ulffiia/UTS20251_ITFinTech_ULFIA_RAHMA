@@ -12,11 +12,13 @@ interface MongooseCache {
 }
 
 declare global {
-  // Menambahkan ke deklarasi global agar tidak error saat akses `global.mongoose`
+  // Supaya tidak error saat akses `global.mongoose` di development (HMR)
+  // eslint-disable-next-line no-var
   var mongoose: MongooseCache | undefined;
 }
 
-let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+// gunakan const karena tidak pernah di-reassign
+const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
 global.mongoose = cached;
 
