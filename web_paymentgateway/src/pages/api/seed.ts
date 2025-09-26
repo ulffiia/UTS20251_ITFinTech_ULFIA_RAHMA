@@ -9,21 +9,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const products = [
     {
       name: "Coca Cola",
-      description: "Soft drink classic",
+      description: "Drink",
       price: 15000,
       category: "Drinks",
+      image: "images/Coca-Cola-2.25-L-Bottle.jpg",
     },
     {
-      name: "Potato Chips",
-      description: "Crispy snack",
+      name: "Japota",
+      description: "Snack",
       price: 10000,
       category: "Snacks",
+      image: "images/japota.webp",
     },
     {
       name: "Bundle Pack",
       description: "Drink + Snack combo",
       price: 22000,
       category: "Bundle",
+      image: "images/bundle.png"
     },
   ];
 
