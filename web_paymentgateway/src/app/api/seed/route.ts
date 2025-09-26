@@ -1,11 +1,12 @@
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Product from "@/models/Product";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  await connectDB();
+export async function GET() {
+  try {
+    await connectDB();
 
-  const products = [
+    const products = [
     {
       name: "Coca Cola",
       description: "Drink",
@@ -29,14 +30,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   ];
 
-  try {
-    // Hapus dulu data lama supaya nggak dobel
+    // Hapus data lama
     await Product.deleteMany({});
     // Insert data baru
     await Product.insertMany(products);
 
-    res.status(200).json({ message: "✅ Seeding success!", products });
+    return NextResponse.json(
+      { 
+        success: true,
+        message: "✅ Seeding success!", 
+        products 
+      },
+      { status: 200 }
+    );
   } catch (error) {
-    res.status(500).json({ message: "❌ Seeding failed", error });
+    console.error("❌ Seeding error:", error);
+    return NextResponse.json(
+      { 
+        success: false,
+        message: "❌ Seeding failed", 
+        error: error instanceof Error ? error.message : "Unknown error" 
+      },
+      { status: 500 }
+    );
   }
 }
