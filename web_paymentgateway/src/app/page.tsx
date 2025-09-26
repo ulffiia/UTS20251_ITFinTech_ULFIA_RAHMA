@@ -1,8 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useCart } from "@/context/CartContext";
+
+// interface Product {
+//   _id: string;
+//   name: string;
+//   description: string;
+//   price: number;
+//   category: string;
+// }
 
 export default function SelectItem() {
+  const [products, setProducts] = useState<any[]>([]);
+  const { cart, addToCart } = useCart();
+
+  useEffect(() => {
+    async function fetchProducts() {
+      const res = await fetch("/api/products");
+      const data = await res.json();
+      setProducts(data);
+    }
+    fetchProducts();
+  }, []);
+
   return (
     <div className="p-4">
       {/* Header */}
@@ -11,40 +33,27 @@ export default function SelectItem() {
         <Link href="/checkout" className="relative">
           🛒
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1">
-            {/* 2 */}
+            {cart.reduce((acc, item) => acc + item.quantity, 0)}
           </span>
         </Link>
       </header>
 
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Search"
-        className="w-full border p-2 rounded mb-4"
-      />
-
-      {/* Categories */}
-      <div className="flex gap-2 mb-4 text-sm">
-        {["All", "Drinks", "Snacks", "Bundle"].map((cat) => (
-          <button
-            key={cat}
-            className="px-3 py-1 border rounded-full hover:bg-gray-100"
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
       {/* Products */}
       <div className="space-y-4">
-        {[1, 2].map((i) => (
-          <div key={i} className="flex items-center justify-between border p-3 rounded">
+        {products.map((p) => (
+          <div key={p._id} className="flex items-center justify-between border p-3 rounded">
+            <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded mr-4" />
             <div>
-              <h2 className="font-semibold">Product Name</h2>
-              <p className="text-gray-600 text-sm">Short description</p>
-              <p className="font-bold mt-1">$$$</p>
+              <h2 className="font-semibold">{p.name}</h2>
+              <p className="text-gray-600 text-sm">{p.description}</p>
+              <p className="font-bold mt-1">Rp {p.price.toLocaleString()}</p>
             </div>
-            <button className="bg-blue-600 text-white px-3 py-1 rounded">
+
+            
+            <button
+              onClick={() => addToCart(p)}
+              className="bg-blue-600 text-white px-3 py-1 rounded"
+            >
               Add +
             </button>
           </div>
