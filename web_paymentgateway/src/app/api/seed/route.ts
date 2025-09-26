@@ -5,7 +5,6 @@ import Product from "@/models/Product";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   await connectDB();
 
-  // Data awal (contoh)
   const products = [
     {
       name: "Coca Cola",

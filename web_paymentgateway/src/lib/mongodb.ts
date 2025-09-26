@@ -1,34 +1,13 @@
-import mongoose, { Mongoose } from "mongoose";
+import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
+const MONGODB_URI = process.env.MONGODB_URI!;
+if (!MONGODB_URI) throw new Error("Please define MONGODB_URI in .env.local");
 
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable");
-}
+let isConnected = false;
 
-interface MongooseCache {
-  conn: Mongoose | null;
-  promise: Promise<Mongoose> | null;
-}
-
-declare global {
-  // Supaya tidak error saat akses `global.mongoose` di development (HMR)
-  // eslint-disable-next-line no-var
-  var mongoose: MongooseCache | undefined;
-}
-
-// gunakan const karena tidak pernah di-reassign
-const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
-
-global.mongoose = cached;
-
-export async function connectDB() {
-  if (cached.conn) return cached.conn;
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI).then((mongoose) => mongoose);
-  }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
-}
+export const connectDB = async () => {
+  if (isConnected) return;
+  const db = await mongoose.connect(MONGODB_URI);
+  isConnected = !!db.connections[0].readyState;
+  console.log("✅ MongoDB connected");
+};
