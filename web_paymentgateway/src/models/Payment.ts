@@ -1,11 +1,14 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, models } from "mongoose";
 
-const PaymentSchema = new mongoose.Schema({
-  checkoutId: { type: mongoose.Schema.Types.ObjectId, ref: "Checkout" },
-  method: { type: String, enum: ["CreditCard", "PayPal", "EWallet", "BankTransfer"], required: true },
-  amount: Number,
-  status: { type: String, enum: ["Pending", "Lunas", "Failed"], default: "Pending" },
-  createdAt: { type: Date, default: Date.now },
-});
+const PaymentSchema = new Schema(
+  {
+    externalId: { type: String, index: true },
+    invoiceId: { type: String, index: true },
+    status: { type: String, default: "PENDING" }, // PENDING | LUNAS | EXPIRED
+    paidAt: { type: Date },
+    lastWebhookRaw: { type: Schema.Types.Mixed }, // simpan payload terakhir
+  },
+  { timestamps: true }
+);
 
-export default mongoose.models.Payment || mongoose.model("Payment", PaymentSchema);
+export default models.Payment || mongoose.model("Payment", PaymentSchema);
