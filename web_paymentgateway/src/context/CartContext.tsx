@@ -18,6 +18,7 @@ interface CartItem extends Product {
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product) => void;
+  decreaseFromCart: (id: string) => void;
   removeFromCart: (id: string) => void;
   clearCart: () => void;
 }
@@ -39,6 +40,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     });
   };
 
+  const decreaseFromCart = (id: string) => {
+    setCart((prev) =>
+      prev
+        .map((item) =>
+          item._id === id ? { ...item, quantity: item.quantity - 1 } : item
+        )
+        .filter((item) => item.quantity > 0) // hapus jika 0
+    );
+  };
+
   const removeFromCart = (id: string) => {
     setCart((prev) => prev.filter((item) => item._id !== id));
   };
@@ -46,7 +57,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = () => setCart([]);
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart }}>
+    <CartContext.Provider
+      value={{ cart, addToCart, decreaseFromCart, removeFromCart, clearCart }}
+    >
       {children}
     </CartContext.Provider>
   );

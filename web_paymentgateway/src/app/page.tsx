@@ -125,7 +125,7 @@ export default function SelectItem() {
                   <h3 className="font-semibold text-gray-900 truncate">{product.name}</h3>
                   <p className="text-sm text-gray-500 mt-1 line-clamp-2">{product.description || "Short description"}</p>
                   <p className="font-bold text-gray-900 mt-2">
-                    Rp {product.price?.toLocaleString() || "0"}
+                    Rp {product.price?.toLocaleString("id-ID") || "0"}
                   </p>
                 </div>
 
