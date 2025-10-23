@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCart } from "@/context/CartContext";
 
 interface Product {
@@ -13,12 +14,12 @@ interface Product {
   category: string;
 }
 
-
 export default function SelectItem() {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const { cart, addToCart } = useCart();
+  const router = useRouter();
 
   const categories = ["All", "Drinks", "Snacks", "Bundle"];
 
@@ -43,14 +44,12 @@ export default function SelectItem() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </div>
-          <h1 className="font-bold text-xl">Logo</h1>
-        </div>
+        <button
+          onClick={() => router.push('/admin')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          Buka Toko
+        </button>
         
         <Link href="/checkout" className="relative">
           <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
