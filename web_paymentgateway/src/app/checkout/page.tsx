@@ -12,6 +12,19 @@ const formatIDR = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+// 🔧 Normalisasi src agar valid untuk next/image
+const toImageSrc = (src?: string) => {
+  if (!src) return null;
+  try {
+    // Jika sudah absolute URL (http/https)
+    const u = new URL(src);
+    return u.toString();
+  } catch {
+    // Kalau bukan URL, anggap file lokal di /public
+    return src.startsWith("/") ? src : `/${src}`;
+  }
+};
+
 export default function CheckoutPage() {
   const { cart, addToCart, decreaseFromCart } = useCart();
 
@@ -71,102 +84,107 @@ export default function CheckoutPage() {
         ) : (
           <>
             <div className="space-y-4 mb-6">
-              {cart.map((item, idx) => (
-                <div
-                  key={item._id}
-                  className="bg-white rounded-lg p-4 shadow-sm"
-                >
-                  <div className="flex items-center gap-4">
-                    {/* Product Image */}
-                    <div className="relative w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt={item.name}
-                          fill
-                          sizes="64px"
-                          className="object-cover rounded-lg"
-                          // Optional: prioritas untuk 2 item teratas
-                          priority={idx < 2}
-                        />
-                      ) : (
-                        <svg
-                          className="w-8 h-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              {cart.map((item, idx) => {
+                const imgSrc = toImageSrc(item.image);
+                return (
+                  <div
+                    key={item._id}
+                    className="bg-white rounded-lg p-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Product Image */}
+                      <div className="relative w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        {imgSrc ? (
+                          <Image
+                            src={imgSrc}
+                            alt={item.name}
+                            fill
+                            sizes="64px"
+                            className="object-cover rounded-lg"
+                            // Prioritaskan 2 item teratas (opsional)
+                            priority={idx < 2}
+                            // Jika belum set domain eksternal di next.config.js, gunakan unoptimized
+                            unoptimized
                           />
-                        </svg>
-                      )}
-                    </div>
+                        ) : (
+                          <svg
+                            className="w-8 h-8 text-gray-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        )}
+                      </div>
 
-                    {/* Product Info */}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900">{item.name}</h3>
-                    </div>
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900">{item.name}</h3>
+                      </div>
 
-                    {/* Quantity Controls */}
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => decreaseFromCart(item._id)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                        aria-label="Kurangi jumlah"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                      {/* Quantity Controls */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => decreaseFromCart(item._id)}
+                          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                          aria-label="Kurangi jumlah"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M20 12H4"
-                          />
-                        </svg>
-                      </button>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M20 12H4"
+                            />
+                          </svg>
+                        </button>
 
-                      <span className="w-8 text-center font-medium">
-                        {item.quantity}
-                      </span>
+                        <span className="w-8 text-center font-medium">
+                          {item.quantity}
+                        </span>
 
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                        aria-label="Tambah jumlah"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                        <button
+                          onClick={() => addToCart(item)}
+                          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                          aria-label="Tambah jumlah"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v16m8-8H4"
-                          />
-                        </svg>
-                      </button>
-                    </div>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        </button>
+                      </div>
 
-                    {/* Price */}
-                    <div className="text-right">
-                      <p className="font-bold">
-                        {formatIDR(item.price * item.quantity)}
-                      </p>
+                      {/* Price */}
+                      <div className="text-right">
+                        <p className="font-bold">
+                          {formatIDR(item.price * item.quantity)}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Order Summary */}

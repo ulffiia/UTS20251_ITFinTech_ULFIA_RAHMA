@@ -6,9 +6,4 @@ export default async function Page() {
   const cookieStore = await cookies(); // ✅ harus pakai await
   const sess = cookieStore.get("sess");
 
-  if (!sess) {
-    redirect("SelectItemClient");
-  }
-
-  return <SelectItemClient />;
 }
