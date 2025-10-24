@@ -1,8 +1,9 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
 
-export default function OtpPage() {
+import { Suspense, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+
+function OtpContent() {
   const sp = useSearchParams();
   const router = useRouter();
   const token = sp.get("token") || "";
@@ -16,10 +17,6 @@ export default function OtpPage() {
     setLoading(true);
     setError("");
 
-    console.log("📤 Sending verify request...");
-    console.log("Code:", code);
-    console.log("Token:", token.slice(0, 20) + "...");
-
     try {
       const r = await fetch("/api/otp/verify", {
         method: "POST",
@@ -27,10 +24,7 @@ export default function OtpPage() {
         body: JSON.stringify({ code, tempToken: token }),
       });
 
-      console.log("Response status:", r.status);
-
       const data = await r.json();
-      console.log("Response data:", data);
 
       if (!r.ok) {
         setError(data.error || "Verifikasi gagal");
@@ -39,8 +33,7 @@ export default function OtpPage() {
       }
 
       if (data.success) {
-        console.log("✅ Verification successful, redirecting...");
-        // Redirect ke homepage
+        // redirect client-side
         window.location.href = data.redirectTo || "/";
       }
     } catch (err) {
@@ -52,8 +45,8 @@ export default function OtpPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <form 
-        onSubmit={onVerify} 
+      <form
+        onSubmit={onVerify}
         className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md space-y-6"
       >
         <div className="text-center">
@@ -85,7 +78,7 @@ export default function OtpPage() {
             </div>
           )}
 
-          <button 
+          <button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-4 rounded-xl transition-colors shadow-lg hover:shadow-xl"
             disabled={loading || code.length !== 6}
@@ -96,7 +89,7 @@ export default function OtpPage() {
 
         <div className="text-center text-sm text-gray-500">
           Tidak menerima kode?{" "}
-          <button 
+          <button
             type="button"
             className="text-blue-600 hover:underline font-medium"
             onClick={() => router.back()}
@@ -106,5 +99,13 @@ export default function OtpPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+export default function OtpPage() {
+  return (
+    <Suspense fallback={null /* atau skeleton sementara */}>
+      <OtpContent />
+    </Suspense>
   );
 }
