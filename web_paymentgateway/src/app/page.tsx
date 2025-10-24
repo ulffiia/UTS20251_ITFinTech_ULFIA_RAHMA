@@ -7,7 +7,7 @@ export default async function Page() {
   const sess = cookieStore.get("sess");
 
   if (!sess) {
-    redirect("/login");
+    redirect("/SelectItemClient");
   }
 
   return <SelectItemClient />;

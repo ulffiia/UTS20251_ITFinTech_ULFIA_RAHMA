@@ -1,26 +1,25 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 export function middleware(req: NextRequest) {
-  const sess = req.cookies.get("sess"); // ✅ ambil langsung dari request
-
+  const sess = req.cookies.get("sess");
   const url = req.nextUrl.clone();
 
-  // Redirect ke /login kalau belum login dan akses halaman admin
+  // Jika user belum punya sesi dan mencoba akses halaman admin → arahkan ke halaman login admin
   if (!sess && url.pathname.startsWith("/admin")) {
-    url.pathname = "/login";
+    url.pathname = "/admin/login";
     return NextResponse.redirect(url);
   }
 
-  // Kalau sudah login dan akses login page, redirect ke dashboard
-  if (sess && url.pathname === "/login") {
+  // Jika sudah login dan mencoba masuk ke /admin/login lagi, langsung diarahkan ke dashboard admin
+  if (sess && url.pathname === "/admin/login") {
     url.pathname = "/admin";
     return NextResponse.redirect(url);
   }
 
+  // Selain itu, biarkan saja lewat
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login"], // halaman yang dicegat middleware
+  matcher: ["/admin/:path*"], // hanya berlaku untuk route admin
 };
