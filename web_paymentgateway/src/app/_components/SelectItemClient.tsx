@@ -28,7 +28,7 @@ const toImageSrc = (src?: string) => {
   }
 };
 
-export default function SelectItem() {
+export default function SelectItemClient({ authed }: { authed: boolean }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
