@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCart } from "@/context/CartContext";
 
 const formatIDR = (n: number) =>
@@ -70,19 +71,23 @@ export default function CheckoutPage() {
         ) : (
           <>
             <div className="space-y-4 mb-6">
-              {cart.map((item) => (
+              {cart.map((item, idx) => (
                 <div
                   key={item._id}
                   className="bg-white rounded-lg p-4 shadow-sm"
                 >
                   <div className="flex items-center gap-4">
                     {/* Product Image */}
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center">
+                    <div className="relative w-16 h-16 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">
                       {item.image ? (
-                        <img
+                        <Image
                           src={item.image}
                           alt={item.name}
-                          className="w-full h-full object-cover rounded-lg"
+                          fill
+                          sizes="64px"
+                          className="object-cover rounded-lg"
+                          // Optional: prioritas untuk 2 item teratas
+                          priority={idx < 2}
                         />
                       ) : (
                         <svg
@@ -111,6 +116,7 @@ export default function CheckoutPage() {
                       <button
                         onClick={() => decreaseFromCart(item._id)}
                         className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        aria-label="Kurangi jumlah"
                       >
                         <svg
                           className="w-4 h-4"
@@ -134,6 +140,7 @@ export default function CheckoutPage() {
                       <button
                         onClick={() => addToCart(item)}
                         className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        aria-label="Tambah jumlah"
                       >
                         <svg
                           className="w-4 h-4"

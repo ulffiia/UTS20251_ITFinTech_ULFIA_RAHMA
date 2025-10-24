@@ -1,11 +1,11 @@
 export async function sendWhatsapp(target: string, message: string) {
   const token = process.env.FONNTE_TOKEN;
-  
+
   console.log("🔧 [FONNTE] Token exists:", !!token);
   console.log("🔧 [FONNTE] Token length:", token?.length || 0);
   console.log("🔧 [FONNTE] Target:", target);
   console.log("🔧 [FONNTE] Message:", message);
-  
+
   if (!token) {
     console.error("❌ [FONNTE] FONNTE_TOKEN missing in .env");
     throw new Error("FONNTE_TOKEN missing");
@@ -20,8 +20,8 @@ export async function sendWhatsapp(target: string, message: string) {
   try {
     const resp = await fetch("https://api.fonnte.com/send", {
       method: "POST",
-      headers: { 
-        "Authorization": token, // Fonnte format: langsung token tanpa Bearer
+      headers: {
+        Authorization: token, // Fonnte format: langsung token tanpa Bearer
       },
       body,
     });
@@ -34,9 +34,15 @@ export async function sendWhatsapp(target: string, message: string) {
       throw new Error(`Fonnte error: ${resp.status} ${responseText}`);
     }
 
-    return JSON.parse(responseText);
-  } catch (error: any) {
-    console.error("💥 [FONNTE] Fatal error:", error);
-    throw error;
+    // Jika API Fonnte selalu mengembalikan JSON
+    return JSON.parse(responseText) as Record<string, unknown>;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("💥 [FONNTE] Fatal error:", error.message);
+      throw new Error(error.message);
+    } else {
+      console.error("💥 [FONNTE] Unknown error:", error);
+      throw new Error("Unknown error while sending WhatsApp message");
+    }
   }
 }

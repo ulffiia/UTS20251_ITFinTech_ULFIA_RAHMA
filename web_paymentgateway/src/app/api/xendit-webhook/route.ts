@@ -22,7 +22,6 @@ type XenditInvoicePayload = {
     external_id?: string;
     amount?: number;
   };
-  // ... field lain diabaikan
 };
 
 type AppStatus = "PENDING" | "LUNAS" | "EXPIRED";
@@ -45,8 +44,19 @@ function pickFromPayload(body: XenditInvoicePayload) {
   return { status, externalId, invoiceId, paidAt, amount };
 }
 
+/** Minimal tipe untuk Checkout yang kita butuhkan di notifikasi */
+type CheckoutLike = {
+  _id?: unknown;
+  phone?: string;
+  userPhone?: string;
+  code?: string;
+  total?: number;
+  amount?: number;
+  customerName?: string;
+};
+
 /** Kirim WA yang lebih informatif */
-async function notifyWhatsappPaid(checkout: any, amount?: number) {
+async function notifyWhatsappPaid(checkout: CheckoutLike, amount?: number) {
   const phone =
     checkout?.phone ||
     checkout?.userPhone ||
@@ -118,11 +128,12 @@ export async function POST(req: Request) {
     await connectDB();
 
     // 4) Ambil Payment dulu untuk idempotency (cek status sebelumnya)
-    const paymentFilter: any = {
-      $or: [
-        externalId ? { externalId } : undefined,
-        invoiceId ? { invoiceId } : undefined,
-      ].filter(Boolean),
+    const orFilters: Array<{ externalId: string } | { invoiceId: string }> = [];
+    if (externalId) orFilters.push({ externalId });
+    if (invoiceId) orFilters.push({ invoiceId });
+
+    const paymentFilter: { $or: Array<{ externalId: string } | { invoiceId: string }> } = {
+      $or: orFilters,
     };
 
     const existing = await Payment.findOne(paymentFilter);
@@ -133,7 +144,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true });
     }
 
-    const previousStatus: AppStatus = existing.status || "PENDING";
+    const previousStatus: AppStatus = (existing.status as AppStatus) || "PENDING";
 
     // 5) Update Payment (idempotent)
     await Payment.updateOne(paymentFilter, {
@@ -149,20 +160,31 @@ export async function POST(req: Request) {
 
     // 6) (Opsional) Sinkronkan status Checkout + kirim WA saat transisi ke LUNAS
     if (existing.checkoutId) {
-      const checkout = await Checkout.findById(existing.checkoutId);
+      const checkoutDoc = await Checkout.findById(existing.checkoutId);
 
-      if (checkout) {
+      if (checkoutDoc) {
         // Update status checkout berdasarkan status app
-        if (appStatus === "LUNAS") checkout.status = "paid";
-        else if (appStatus === "EXPIRED") checkout.status = "expired";
-        else checkout.status = "pending";
+        if (appStatus === "LUNAS") checkoutDoc.status = "paid";
+        else if (appStatus === "EXPIRED") checkoutDoc.status = "expired";
+        else checkoutDoc.status = "pending";
 
-        await checkout.save();
+        await checkoutDoc.save();
 
         // Hanya kirim WA jika barusan berubah menjadi LUNAS (bukan re-webhook)
         const justPaid = previousStatus !== "LUNAS" && appStatus === "LUNAS";
         if (justPaid) {
-          await notifyWhatsappPaid(checkout, amount);
+          await notifyWhatsappPaid(
+            {
+              _id: checkoutDoc._id,
+              phone: checkoutDoc.phone,
+              userPhone: (checkoutDoc as unknown as { userPhone?: string })?.userPhone,
+              code: checkoutDoc.code,
+              total: checkoutDoc.total,
+              amount: checkoutDoc.amount,
+              customerName: checkoutDoc.customerName,
+            },
+            amount
+          );
         }
       } else {
         console.warn("ℹ️ Checkout tidak ditemukan:", existing.checkoutId);

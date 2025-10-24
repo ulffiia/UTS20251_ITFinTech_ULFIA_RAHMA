@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB, OtpModel } from "@/lib/mongodb";
-import User from "@/models/User"; // asumsi kamu sudah punya
+import User from "@/models/User";
 import { sendWhatsapp } from "@/lib/fonnte";
 import jwt from "jsonwebtoken";
 
@@ -10,6 +10,7 @@ function normalizeIndoPhone(input: string) {
   if (!n.startsWith("62")) n = "62" + n;
   return n;
 }
+
 function genOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -18,11 +19,13 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const phone = normalizeIndoPhone(String(body.phone || ""));
-    if (!phone) return NextResponse.json({ error: "Phone required" }, { status: 400 });
+    if (!phone)
+      return NextResponse.json({ error: "Phone required" }, { status: 400 });
 
     await connectDB();
     const user = await User.findOne({ phone });
-    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+    if (!user)
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     // generate & simpan OTP (5 menit)
     const code = genOtp();
@@ -34,7 +37,9 @@ export async function POST(req: Request) {
     });
 
     // kirim WA
-    const template = process.env.FONNTE_OTP_TEMPLATE || "Kode OTP kamu {{OTP}} (berlaku 5 menit)";
+    const template =
+      process.env.FONNTE_OTP_TEMPLATE ||
+      "Kode OTP kamu {{OTP}} (berlaku 5 menit)";
     await sendWhatsapp(phone, template.replace("{{OTP}}", code));
 
     // temp token untuk langkah verify
@@ -46,6 +51,13 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ mfaRequired: true, phone, tempToken });
   } catch (e) {
-  const errorMessage = e instanceof Error ? e.message : "Server error";
+    const errorMessage = e instanceof Error ? e.message : "Server error";
+    console.error("Login error:", errorMessage);
+
+    // Gunakan variabel di response agar tidak 'unused'
+    return NextResponse.json(
+      { error: errorMessage || "Gagal memproses login" },
+      { status: 500 }
+    );
   }
 }
