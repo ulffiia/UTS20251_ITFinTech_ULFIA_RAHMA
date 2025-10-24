@@ -56,8 +56,8 @@ export async function POST(req: Request) {
 
     // kembali ke halaman login
     return NextResponse.redirect(new URL("/login", req.url), { status: 302 });
-  } catch (e: any) {
-    console.error(e);
-    return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
-  }
+  } catch (e) {
+  const errorMessage = e instanceof Error ? e.message : "Server error";
+  return NextResponse.json({ error: errorMessage }, { status: 500 });
+}
 }

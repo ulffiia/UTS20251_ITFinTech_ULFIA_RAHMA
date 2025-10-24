@@ -11,38 +11,51 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+// ---- Tambahkan tipe kuat untuk analytics ----
+type SalesByDate = Record<string, number>;
+type StatusCount = Record<string, number>; // contoh: { paid: number; pending: number; ... }
+
+interface Analytics {
+  totalOrders: number;
+  totalRevenue: number;
+  totalProductsSold: number;
+  statusCount?: StatusCount;
+  salesByDate: SalesByDate;
+}
+
+interface ChartPoint {
+  date: string;
+  value: number;
+}
+
 export default function AdminDashboard() {
-  const [analytics, setAnalytics] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<Analytics | null>(null);
   const router = useRouter();
 
   useEffect(() => {
     fetch("/api/analytics")
       .then((res) => res.json())
-      .then((data) => setAnalytics(data))
+      .then((data: Analytics) => setAnalytics(data))
       .catch((err) => console.error("Gagal memuat analytics:", err));
   }, []);
 
-  if (!analytics)
+  if (!analytics) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-500 text-lg">Memuat data analytics...</p>
       </div>
     );
+  }
 
-  const chartData = Object.entries(analytics.salesByDate).map(
-    ([date, value]) => ({
-      date,
-      value,
-    })
+  const chartData: ChartPoint[] = Object.entries(analytics.salesByDate).map(
+    ([date, value]) => ({ date, value })
   );
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-8">
       {/* Header */}
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Dashboard Admin 📊
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard Admin 📊</h1>
         <div className="flex gap-3">
           <button
             onClick={() => router.push("/admin/products")}
@@ -85,8 +98,8 @@ export default function AdminDashboard() {
           <div className="bg-white p-4 rounded-lg shadow">
             <p className="text-gray-500 text-sm">Status Checkout</p>
             <h3 className="text-sm font-medium">
-              Paid: {analytics.statusCount?.paid || 0}, Pending:{" "}
-              {analytics.statusCount?.pending || 0}
+              Paid: {analytics.statusCount?.paid ?? 0}, Pending:{" "}
+              {analytics.statusCount?.pending ?? 0}
             </h3>
           </div>
         </div>
@@ -101,13 +114,11 @@ export default function AdminDashboard() {
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" />
+              <Bar dataKey="value" />
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500 text-center">
-            Belum ada data penjualan.
-          </p>
+          <p className="text-gray-500 text-center">Belum ada data penjualan.</p>
         )}
       </section>
     </div>

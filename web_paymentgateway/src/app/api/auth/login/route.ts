@@ -45,8 +45,7 @@ export async function POST(req: Request) {
     );
 
     return NextResponse.json({ mfaRequired: true, phone, tempToken });
-  } catch (e: any) {
-    console.error(e);
-    return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
+  } catch (e) {
+  const errorMessage = e instanceof Error ? e.message : "Server error";
   }
 }

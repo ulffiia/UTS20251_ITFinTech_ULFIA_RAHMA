@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image"; // ✅ Import Image HARUS di bagian atas
 
 interface Product {
   _id: string;
@@ -30,6 +31,7 @@ export default function AdminProductsPage() {
       setProducts(data);
     } catch (error) {
       console.error("Failed to fetch products:", error);
+      alert("Gagal memuat produk");
     } finally {
       setIsLoading(false);
     }
@@ -43,9 +45,12 @@ export default function AdminProductsPage() {
       if (res.ok) {
         setProducts(products.filter((p) => p._id !== id));
         alert("Produk berhasil dihapus!");
+      } else {
+        alert("Gagal menghapus produk");
       }
     } catch (error) {
-      alert("Gagal menghapus produk");
+      console.error("Delete error:", error);
+      alert("Terjadi kesalahan saat menghapus produk");
     }
   };
 
@@ -67,7 +72,7 @@ export default function AdminProductsPage() {
         <h1 className="text-2xl font-bold text-gray-800">Kelola Produk</h1>
         <div className="flex gap-3">
           <button
-            onClick={() => router.push("/admin")} // ✅ diarahkan ke dashboard admin
+            onClick={() => router.push("/admin")}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             ← Kembali ke Dashboard
@@ -110,9 +115,17 @@ export default function AdminProductsPage() {
                       <td className="px-6 py-4">
                         <div className="w-12 h-12 bg-gray-100 rounded overflow-hidden">
                           {product.image ? (
-                            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+                            <Image
+                              src={product.image}
+                              alt={product.name}
+                              width={48}
+                              height={48}
+                              className="object-cover w-full h-full"
+                            />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">📦</div>
+                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                              📦
+                            </div>
                           )}
                         </div>
                       </td>
@@ -187,6 +200,7 @@ function ProductForm({ product, onClose }: { product: Product | null; onClose: (
         alert("Gagal menyimpan produk");
       }
     } catch (error) {
+      console.error("Submit error:", error);
       alert("Terjadi kesalahan");
     } finally {
       setIsSubmitting(false);

@@ -10,7 +10,7 @@ export default function AdminLogin() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
@@ -29,7 +29,9 @@ export default function AdminLogin() {
       } else {
         setError(data.error || "Login gagal");
       }
-    } catch (err) {
+    } catch (error) {
+      // log biar nggak kena no-unused-vars & tetap membantu debug
+      console.error(error);
       setError("Terjadi kesalahan. Coba lagi.");
     } finally {
       setIsLoading(false);
@@ -51,9 +53,7 @@ export default function AdminLogin() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Admin
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email Admin</label>
             <input
               type="email"
               value={email}
@@ -65,9 +65,7 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
             <input
               type="password"
               value={password}

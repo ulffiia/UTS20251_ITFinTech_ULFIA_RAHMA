@@ -43,7 +43,7 @@ export default function OtpPage() {
         // Redirect ke homepage
         window.location.href = data.redirectTo || "/";
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("💥 Error:", err);
       setError("Terjadi kesalahan. Coba lagi.");
       setLoading(false);
