@@ -5,6 +5,7 @@ import Link from "next/link";
 
 export default function LoginPage() {
   const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState(""); // 👈 Tambah ini
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -14,7 +15,7 @@ export default function LoginPage() {
     const r = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, password }), // 👈 kirim password juga
     });
     const data = await r.json();
     setLoading(false);
@@ -50,6 +51,15 @@ export default function LoginPage() {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="border rounded-lg w-full p-3 text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
 
         <button

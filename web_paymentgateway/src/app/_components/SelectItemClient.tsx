@@ -15,15 +15,12 @@ interface Product {
   category: string;
 }
 
-// 🔧 Helper untuk memastikan path gambar valid
 const toImageSrc = (src?: string) => {
   if (!src) return null;
   try {
-    // Jika URL absolut (http/https)
     const u = new URL(src);
     return u.toString();
   } catch {
-    // Jika bukan URL, anggap file lokal
     return src.startsWith("/") ? src : `/${src}`;
   }
 };
@@ -32,6 +29,7 @@ export default function SelectItemClient({ authed }: { authed: boolean }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // ✅ State untuk loading
   const { cart, addToCart } = useCart();
   const router = useRouter();
 
@@ -45,6 +43,31 @@ export default function SelectItemClient({ authed }: { authed: boolean }) {
     }
     fetchProducts();
   }, []);
+
+  // ✅ Fungsi logout
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    
+    setIsLoggingOut(true);
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (res.ok) {
+        // Redirect ke halaman utama dan refresh
+        router.push("/");
+        router.refresh();
+      } else {
+        alert("Gagal logout, coba lagi");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+      alert("Terjadi kesalahan saat logout");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name
@@ -61,27 +84,45 @@ export default function SelectItemClient({ authed }: { authed: boolean }) {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between">
-        <button
-          onClick={() => router.push("/admin")}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-        >
-          Buka Toko
-        </button>
+        {/* Kiri: tombol Buka Toko (untuk user yang login) */}
+        {authed && (
+          <button
+            onClick={() => router.push("/admin")}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          >
+            Buka Toko
+          </button>
+        )}
 
-        <div className="flex items-center gap-3">
-          {/* Login & Register Buttons */}
-          <button
-            onClick={() => router.push("/login")}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            Login
-          </button>
-          <button
-            onClick={() => router.push("/register")}
-            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            Register
-          </button>
+        <div className="flex items-center gap-3 ml-auto">
+          {/* Login & Register Buttons - hanya muncul kalau BELUM login */}
+          {!authed && (
+            <>
+              <button
+                onClick={() => router.push("/login")}
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => router.push("/register")}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Register
+              </button>
+            </>
+          )}
+
+          {/* ✅ Logout Button - hanya muncul kalau SUDAH login */}
+          {authed && (
+            <button
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              {isLoggingOut ? "Logging out..." : "Logout"}
+            </button>
+          )}
 
           {/* Cart Icon */}
           <Link href="/checkout" className="relative">
