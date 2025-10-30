@@ -1,36 +1,37 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import Payment from "@/models/Payment";
+import Checkout from "@/models/Checkout";
 
 export async function GET(req: Request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status"); // filter by status
+    const status = searchParams.get("status");
     const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = parseInt(searchParams.get("limit") || "10", 10);
+    const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    // ✅ Definisikan tipe query dengan aman
-    const query: Partial<{ status: string }> = {};
+    // Build query
+    const query: any = {};
     if (status && status !== "ALL") {
       query.status = status;
     }
 
     const skip = (page - 1) * limit;
 
-    const [payments, total] = await Promise.all([
-      Payment.find(query)
-        .populate("userId", "name email phone")
+    // Fetch checkouts dengan populate
+    const [checkouts, total] = await Promise.all([
+      Checkout.find(query)
+        .populate("userId", "name email")
         .populate("items.productId", "name")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Payment.countDocuments(query),
+      Checkout.countDocuments(query),
     ]);
 
     return NextResponse.json({
-      payments,
+      checkouts,
       pagination: {
         page,
         limit,
