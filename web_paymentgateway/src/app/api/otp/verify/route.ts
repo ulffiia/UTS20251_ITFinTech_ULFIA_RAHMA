@@ -13,8 +13,8 @@ export async function POST(req: Request) {
   try {
     const { code, tempToken } = await req.json();
 
-    console.log("🔍 [VERIFY] Code:", code);
-    console.log("🔍 [VERIFY] Token exists:", !!tempToken);
+    console.log("🔐 [VERIFY] Code:", code);
+    console.log("🔐 [VERIFY] Token exists:", !!tempToken);
 
     if (!code || !tempToken) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ Ubah tipe dari any ke TempTokenPayload
+    // Verify temp token
     let payload: TempTokenPayload;
     try {
       const verified = jwt.verify(
@@ -73,22 +73,21 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
-    console.log("🎫 [VERIFY] Session created");
+    console.log("🎫 [VERIFY] Session token created");
 
-    // Set cookie using helper function
-    setSessionCookie(session);
+    // ✅ CRITICAL FIX: Tambahkan await!
+    await setSessionCookie(session);
 
+    console.log("✅ [VERIFY] Session cookie set successfully");
     console.log("✅ [VERIFY] Login successful, redirecting to /");
 
-    // Return JSON response instead of redirect for client-side handling
+    // Return JSON response for client-side handling
     return NextResponse.json({
       success: true,
       redirectTo: "/",
     });
   } catch (e) {
-    // ✅ Hilangkan any, ganti dengan tipe unknown
-    const error =
-      e instanceof Error ? e.message : "Terjadi kesalahan pada server";
+    const error = e instanceof Error ? e.message : "Terjadi kesalahan pada server";
     console.error("💥 [VERIFY] Error:", error);
     return NextResponse.json({ error }, { status: 500 });
   }
