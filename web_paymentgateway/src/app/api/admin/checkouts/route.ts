@@ -11,10 +11,14 @@ export async function GET(req: Request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-    // Build query
-    const query: any = {};
+    // ✅ Tipe query yang aman sesuai Checkout model
+    type CheckoutQuery = {
+      status?: "pending" | "paid" | "expired" | "cancelled";
+    };
+
+    const query: CheckoutQuery = {};
     if (status && status !== "ALL") {
-      query.status = status;
+      query.status = status as CheckoutQuery["status"];
     }
 
     const skip = (page - 1) * limit;
