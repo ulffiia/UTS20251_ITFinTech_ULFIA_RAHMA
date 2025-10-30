@@ -4,6 +4,26 @@ import { connectDB } from "@/lib/mongodb";
 import Checkout from "@/models/Checkout";
 import Payment from "@/models/Payment";
 
+// Define interface for item
+interface Item {
+  name: string;
+  quantity: number;
+  price: number;
+}
+
+// Define interface for request body
+interface RequestBody {
+  customerName: string;
+  email?: string;
+  phone: string;
+  items: Item[];
+  subtotal: number;
+  tax?: number;
+  discount?: number;
+  notes?: string;
+  userId?: string;
+}
+
 // Generate unique checkout code
 function generateCheckoutCode(): string {
   const timestamp = Date.now().toString(36).toUpperCase();
@@ -15,7 +35,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const body = await req.json();
+    const body: RequestBody = await req.json();
     const {
       customerName,
       email,
@@ -25,7 +45,6 @@ export async function POST(req: Request) {
       tax = 0,
       discount = 0,
       notes,
-      shippingAddress,
       userId, // opsional
     } = body;
 
@@ -65,7 +84,6 @@ export async function POST(req: Request) {
       total,
       status: "pending",
       notes,
-      shippingAddress,
       userId: userId || undefined,
     });
 
@@ -87,7 +105,7 @@ export async function POST(req: Request) {
         invoice_duration: 86400, // 24 jam
         success_redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-success?code=${code}`,
         failure_redirect_url: `${process.env.NEXT_PUBLIC_BASE_URL}/payment-failed?code=${code}`,
-        items: items.map((item: any) => ({
+        items: items.map((item: Item) => ({
           name: item.name,
           quantity: item.quantity,
           price: item.price,
@@ -154,8 +172,9 @@ export async function POST(req: Request) {
         expiresAt: invoice.expiry_date,
         amount: total,
       });
-    } catch (xenditError: any) {
-      console.error("❌ Xendit error:", xenditError);
+    } catch (xenditError: unknown) {
+      const err = xenditError as Error;
+      console.error("❌ Xendit error:", err);
 
       // Rollback: hapus checkout jika invoice gagal dibuat
       await Checkout.findByIdAndDelete(checkout._id);
@@ -163,15 +182,16 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: "Gagal membuat invoice pembayaran",
-          details: xenditError.message,
+          details: err.message,
         },
         { status: 500 }
       );
     }
-  } catch (error: any) {
-    console.error("❌ Create invoice error:", error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("❌ Create invoice error:", err);
     return NextResponse.json(
-      { error: error.message || "Gagal memproses checkout" },
+      { error: err.message || "Gagal memproses checkout" },
       { status: 500 }
     );
   }

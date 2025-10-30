@@ -18,6 +18,19 @@ type XenditInvoicePayload = {
   payment_channel?: string;
 };
 
+type CheckoutMinimal = {
+  _id?: string;
+  phone?: string;
+  code?: string;
+  total?: number;
+  customerName?: string;
+};
+
+type PaymentMinimal = {
+  paymentMethod?: string;
+};
+
+
 function normalizeStatus(xenditStatus?: string): string {
   const s = (xenditStatus || "").toUpperCase();
   if (s === "PAID" || s === "SETTLED") return "LUNAS";
@@ -31,7 +44,7 @@ function normalizeCheckoutStatus(paymentStatus: string): string {
   return "pending";
 }
 
-async function notifyWhatsappPaid(checkout: any, payment: any) {
+async function notifyWhatsappPaid(checkout: CheckoutMinimal, payment: PaymentMinimal) {
   const phone = checkout?.phone;
 
   if (!phone) {
