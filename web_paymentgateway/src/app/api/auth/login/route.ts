@@ -3,7 +3,7 @@ import { connectDB, OtpModel } from "@/lib/mongodb";
 import User from "@/models/User";
 import { sendWhatsapp } from "@/lib/fonnte";
 import jwt from "jsonwebtoken";
-import { verifyHash } from "@/lib/auth"; // 👈 Import verifikasi password
+import { verifyHash } from "@/lib/auth";
 
 function normalizeIndoPhone(input: string) {
   let n = (input || "").replace(/\D/g, "");
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 👇 Verifikasi password lebih dulu
+    // Verifikasi password lebih dulu
     if (!user.passwordHash) {
       return NextResponse.json(
         { error: "Password belum diset" },
@@ -92,12 +92,12 @@ export async function POST(req: Request) {
       );
     }
 
+    // ✅ PERBAIKAN: Gunakan "purpose" bukan "stage"
     const tempToken = jwt.sign(
       {
         sub: String(user._id),
         phone,
-        stage: "mfa",
-        // Otorisasi sementara hanya untuk verifikasi OTP
+        purpose: "mfa",  // ✅ Changed from "stage" to "purpose"
       },
       secret,
       { expiresIn: `${ttlMinutes}m` }
